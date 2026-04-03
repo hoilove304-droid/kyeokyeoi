@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>켜켜이 - 주문하기</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" style="text-decoration:none;">
+        <h1 class="logo">
+          <img src="/favicon.svg" alt="켜켜이 로고" class="logo-icon" />
+          켜켜이
+        </h1>
+      </a>
+    </div>
+  </header>
+
+  <!-- 진행 단계 -->
+  <div class="progress-bar">
+    <div class="progress-step done">1. 이야기 입력</div>
+    <div class="progress-arrow">→</div>
+    <div class="progress-step done">2. 책 생성</div>
+    <div class="progress-arrow">→</div>
+    <div class="progress-step active">3. 주문</div>
+  </div>
+
+  <main class="create-main">
+    <div class="create-inner">
+
+      <!-- 돌아가기 -->
+      <div style="margin-bottom: 8px;">
+        <a href="/create.html" class="btn-back">← 이야기 수정하러 돌아가기</a>
+      </div>
+
+      <!-- 책 정보 -->
+      <div class="section-box">
+        <h2 class="section-heading">생성된 책 정보</h2>
+        <div class="book-info">
+          <div class="book-info-row">
+            <span class="book-info-label">책 제목</span>
+            <span class="book-info-value" id="displayTitle">-</span>
+          </div>
+          <div class="book-info-row">
+            <span class="book-info-label">Book UID</span>
+            <span class="book-info-value" id="displayBookUid">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 견적 -->
+      <div class="section-box">
+        <div class="section-heading-row">
+          <h2 class="section-heading">견적 확인</h2>
+          <button class="btn-add" onclick="getEstimate()">견적 조회</button>
+        </div>
+        <div id="estimateResult" class="estimate-result hidden">
+          <div class="estimate-row">
+            <span>상품 금액</span>
+            <span id="productAmount">-</span>
+          </div>
+          <div class="estimate-row">
+            <span>배송비</span>
+            <span id="shippingFee">-</span>
+          </div>
+          <div class="estimate-row">
+            <span>포장비</span>
+            <span id="packagingFee">-</span>
+          </div>
+          <div class="estimate-row total">
+            <span>총 결제 금액 (VAT 포함)</span>
+            <span id="totalAmount">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 배송 정보 -->
+      <div class="section-box">
+        <h2 class="section-heading">배송 정보</h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">받는 분 이름</label>
+            <input type="text" id="recipientName" class="input-text" placeholder="홍길동" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">연락처</label>
+            <input type="text" id="recipientPhone" class="input-text" placeholder="010-0000-0000" />
+          </div>
+          <div class="form-group full">
+            <label class="form-label">우편번호</label>
+            <input type="text" id="postalCode" class="input-text" placeholder="06236" style="max-width:200px;" />
+          </div>
+          <div class="form-group full">
+            <label class="form-label">주소</label>
+            <input type="text" id="address1" class="input-text" placeholder="서울특별시 강남구 테헤란로 123" />
+          </div>
+          <div class="form-group full">
+            <label class="form-label">상세 주소</label>
+            <input type="text" id="address2" class="input-text" placeholder="4층" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 주문 버튼 -->
+      <div class="submit-area">
+        <button class="btn-primary btn-large" onclick="placeOrder()">
+          주문하기
+        </button>
+        <p class="submit-desc">Sandbox 환경 — 실제 결제 및 배송이 이루어지지 않습니다</p>
+      </div>
+
+      <!-- 로딩 -->
+      <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+        <p id="loadingText">주문 처리 중...</p>
+      </div>
+
+      <!-- 주문 완료 -->
+      <div id="orderComplete" class="order-complete hidden">
+        <h2 class="complete-title">주문이 완료됐어요!</h2>
+        <p class="complete-desc">켜켜이 쌓인 추억이 곧 책으로 만들어집니다.</p>
+        <div class="complete-info">
+          <div class="estimate-row">
+            <span>주문 번호</span>
+            <span id="orderUid">-</span>
+          </div>
+          <div class="estimate-row">
+            <span>결제 금액</span>
+            <span id="paidAmount">-</span>
+          </div>
+        </div>
+        <a href="/" class="btn-primary" style="margin-top:32px; display:inline-block;">
+          처음으로 돌아가기
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>켜켜이 · Powered by Book Print API</p>
+  </footer>
+
+  <script>
+    // 책 정보 로드
+    const bookUid = localStorage.getItem('bookUid');
+    const bookTitle = localStorage.getItem('bookTitle');
+
+    document.getElementById('displayTitle').textContent = bookTitle || '-';
+    document.getElementById('displayBookUid').textContent = bookUid || '-';
+
+    // 견적 조회
+    async function getEstimate() {
+      if (!bookUid) { alert('책 정보가 없어요. 처음부터 다시 시작해주세요.'); return; }
+      try {
+        const res = await fetch('/api/orders/estimate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookUid })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        const d = data.data;
+        document.getElementById('productAmount').textContent = d.productAmount.toLocaleString() + '원';
+        document.getElementById('shippingFee').textContent = d.shippingFee.toLocaleString() + '원';
+        document.getElementById('packagingFee').textContent = d.packagingFee.toLocaleString() + '원';
+        document.getElementById('totalAmount').textContent = d.paidCreditAmount.toLocaleString() + '원';
+        document.getElementById('estimateResult').classList.remove('hidden');
+      } catch (err) {
+        alert('견적 조회 실패: ' + err.message);
+      }
+    }
+
+    // 주문 생성
+    async function placeOrder() {
+      if (!bookUid) { alert('책 정보가 없어요. 처음부터 다시 시작해주세요.'); return; }
+
+      const shipping = {
+        recipientName: document.getElementById('recipientName').value,
+        recipientPhone: document.getElementById('recipientPhone').value,
+        postalCode: document.getElementById('postalCode').value,
+        address1: document.getElementById('address1').value,
+        address2: document.getElementById('address2').value,
+      };
+
+      if (!shipping.recipientName || !shipping.recipientPhone || !shipping.postalCode || !shipping.address1) {
+        alert('배송 정보를 모두 입력해주세요.');
+        return;
+      }
+
+      document.getElementById('loading').classList.remove('hidden');
+      document.querySelector('.submit-area').style.display = 'none';
+
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookUid, shipping })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('orderComplete').classList.remove('hidden');
+        document.getElementById('orderUid').textContent = data.data.orderUid;
+        document.getElementById('paidAmount').textContent = data.data.totalAmount.toLocaleString() + '원';
+
+        localStorage.removeItem('bookUid');
+        localStorage.removeItem('bookTitle');
+      } catch (err) {
+        document.getElementById('loading').classList.add('hidden');
+        document.querySelector('.submit-area').style.display = 'block';
+        alert('주문 실패: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

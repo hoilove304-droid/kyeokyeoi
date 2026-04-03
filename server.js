@@ -16,7 +16,7 @@ app.use(express.static('public'));
 const API_KEY = process.env.SWEETBOOK_API_KEY;
 const API_URL = process.env.SWEETBOOK_API_URL;
 
-// 책 만들기
+// 책 생성
 app.post('/api/books', async (req, res) => {
   try {
     const { title } = req.body;
@@ -28,7 +28,7 @@ app.post('/api/books', async (req, res) => {
       },
       body: JSON.stringify({
         title: title || '켜켜이 - 우리의 이야기',
-        bookSpecUid: 'SQUAREBOOK_HC',
+        bookSpecUid: 'PHOTOBOOK_A4_SC',
         creationType: 'TEST'
       })
     });
@@ -47,16 +47,25 @@ app.post('/api/books/:bookUid/cover', upload.fields([
   try {
     const { bookUid } = req.params;
     const FormData = (await import('node-fetch')).FormData;
+    const { Blob } = await import('node-fetch');
     const form = new FormData();
 
-    if (req.files['frontPhoto']) {
-      form.append('frontPhoto', fs.createReadStream(req.files['frontPhoto'][0].path));
+    const photoFile = req.files?.['frontPhoto']?.[0];
+    if (photoFile) {
+      const fileBuffer = fs.readFileSync(photoFile.path);
+      const blob = new Blob([fileBuffer], { type: 'image/jpeg' });
+      form.append('coverPhoto', blob, 'cover.jpg');
+    } else {
+      return res.json({ success: false, message: '표지 이미지가 없습니다' });
     }
-    if (req.files['backPhoto']) {
-      form.append('backPhoto', fs.createReadStream(req.files['backPhoto'][0].path));
-    }
-    form.append('templateUid', 'tpl_F8d15af9fd');
-    form.append('parameters', JSON.stringify({ title: req.body.title || '켜켜이' }));
+
+    form.append('templateUid', '75HruEK3EnG5');
+    form.append('parameters', JSON.stringify({
+      childName: req.body.title || '켜켜이',
+      schoolName: '켜켜이',
+      volumeLabel: '우리의 이야기',
+      periodText: '소중한 추억'
+    }));
 
     const response = await fetch(`${API_URL}/books/${bookUid}/cover`, {
       method: 'POST',
@@ -64,6 +73,7 @@ app.post('/api/books/:bookUid/cover', upload.fields([
       body: form
     });
     const data = await response.json();
+    console.log('표지 API 응답:', JSON.stringify(data));
     res.json(data);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -74,16 +84,22 @@ app.post('/api/books/:bookUid/cover', upload.fields([
 app.post('/api/books/:bookUid/contents', upload.single('file'), async (req, res) => {
   try {
     const { bookUid } = req.params;
-    const { templateUid, date, contents } = req.body;
+    const { date, contents } = req.body;
     const FormData = (await import('node-fetch')).FormData;
+    const { Blob } = await import('node-fetch');
     const form = new FormData();
 
     if (req.file) {
-      form.append('files', fs.createReadStream(req.file.path));
+      const fileBuffer = fs.readFileSync(req.file.path);
+      const blob = new Blob([fileBuffer], { type: 'image/jpeg' });
+      form.append('files', blob, 'content.jpg');
     }
-    form.append('templateUid', templateUid || 'cnH0Ud1nl1f9');
+    form.append('templateUid', '5NxuQPBMyuTm');
     if (date || contents) {
-      form.append('parameters', JSON.stringify({ date, contents }));
+      form.append('parameters', JSON.stringify({
+        date: date || '',
+        contents: contents || ''
+      }));
     }
 
     const response = await fetch(`${API_URL}/books/${bookUid}/contents?breakBefore=page`, {
@@ -98,7 +114,7 @@ app.post('/api/books/:bookUid/contents', upload.single('file'), async (req, res)
   }
 });
 
-// 책 마무리
+// 책 최종화
 app.post('/api/books/:bookUid/finalization', async (req, res) => {
   try {
     const { bookUid } = req.params;
@@ -113,7 +129,7 @@ app.post('/api/books/:bookUid/finalization', async (req, res) => {
   }
 });
 
-// 견적 조회하기
+// 견적 조회
 app.post('/api/orders/estimate', async (req, res) => {
   try {
     const { bookUid } = req.body;
@@ -148,6 +164,19 @@ app.post('/api/orders', async (req, res) => {
         items: [{ bookUid, quantity: 1 }],
         shipping
       })
+    });
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// 템플릿 목록 조회
+app.get('/api/templates', async (req, res) => {
+  try {
+    const response = await fetch(`${API_URL}/templates`, {
+      headers: { 'Authorization': `Bearer ${API_KEY}` }
     });
     const data = await response.json();
     res.json(data);

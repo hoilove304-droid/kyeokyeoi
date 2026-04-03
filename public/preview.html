@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>켜켜이 - 책 미리보기</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" style="text-decoration:none;">
+        <h1 class="logo">
+          <img src="/favicon.svg" alt="켜켜이 로고" class="logo-icon" />
+          켜켜이
+        </h1>
+      </a>
+    </div>
+  </header>
+
+  <!-- 진행 단계 -->
+  <div class="progress-bar">
+    <div class="progress-step done">1. 이야기 입력</div>
+    <div class="progress-arrow">→</div>
+    <div class="progress-step active">2. 미리보기</div>
+    <div class="progress-arrow">→</div>
+    <div class="progress-step">3. 주문</div>
+  </div>
+
+  <main class="create-main">
+    <div class="create-inner">
+
+      <!-- 책 표지 -->
+      <div class="preview-cover">
+        <div class="preview-cover-inner">
+          <p class="preview-cover-sub">켜켜이</p>
+          <h2 class="preview-cover-title" id="previewTitle">-</h2>
+          <p class="preview-cover-desc">소중한 추억을 담은 한 권의 책</p>
+        </div>
+      </div>
+
+      <!-- 안내 -->
+      <div class="preview-notice">
+        <span>📋</span>
+        <span>입력하신 내용으로 구성된 책 미리보기예요. 실제 인쇄본과 레이아웃이 다를 수 있어요.</span>
+      </div>
+
+      <!-- 페이지 카드 목록 -->
+      <div id="previewCards" class="preview-cards"></div>
+
+      <!-- 버튼 영역 -->
+      <div class="preview-actions">
+        <a href="/create.html" class="btn-back-large">← 수정하러 돌아가기</a>
+        <button class="btn-primary btn-large" onclick="goToOrder()">
+          이대로 주문하기 →
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>켜켜이 · Powered by Book Print API</p>
+  </footer>
+
+  <script>
+    // localStorage에서 데이터 로드
+    const bookTitle = localStorage.getItem('bookTitle') || '켜켜이 - 우리의 이야기';
+    const bookUid = localStorage.getItem('bookUid');
+    const entriesRaw = localStorage.getItem('bookEntries');
+    const entries = entriesRaw ? JSON.parse(entriesRaw) : [];
+
+    document.getElementById('previewTitle').textContent = bookTitle;
+
+    // 카드 렌더링
+    const container = document.getElementById('previewCards');
+
+    if (entries.length === 0) {
+      container.innerHTML = '<p style="text-align:center; color:#aaa; padding:40px;">미리보기 데이터가 없어요. 처음부터 다시 시작해주세요.</p>';
+    } else {
+      entries.forEach((entry, i) => {
+        const card = document.createElement('div');
+        card.className = 'preview-card';
+        card.innerHTML = `
+          <div class="preview-card-num">${i + 1}</div>
+          <div class="preview-card-body">
+            ${entry.photoUrl
+              ? `<div class="preview-card-photo"><img src="${entry.photoUrl}" alt="사진" /></div>`
+              : `<div class="preview-card-photo no-photo"><span>📷</span><p>사진 없음</p></div>`
+            }
+            <div class="preview-card-content">
+              <p class="preview-card-period">${entry.period || ''}</p>
+              <h3 class="preview-card-title">${entry.title || ''}</h3>
+              <p class="preview-card-text">${entry.text || ''}</p>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function goToOrder() {
+      if (!bookUid) {
+        alert('책 정보가 없어요. 처음부터 다시 시작해주세요.');
+        return;
+      }
+      window.location.href = '/order.html';
+    }
+  </script>
+</body>
+</html>

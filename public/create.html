@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>켜켜이 - 우리의 이야기 만들기</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" style="text-decoration:none;">
+        <h1 class="logo">
+          <img src="/favicon.svg" alt="켜켜이 로고" class="logo-icon" />
+          켜켜이
+        </h1>
+      </a>
+    </div>
+  </header>
+
+  <!-- 진행 단계 표시 -->
+  <div class="progress-bar">
+    <div class="progress-step active">1. 이야기 입력</div>
+    <div class="progress-arrow">→</div>
+    <div class="progress-step">2. 책 생성</div>
+    <div class="progress-arrow">→</div>
+    <div class="progress-step">3. 주문</div>
+  </div>
+
+  <!-- 메인 -->
+  <main class="create-main">
+    <div class="create-inner">
+
+      <!-- 책 제목 입력 -->
+      <div class="section-box">
+        <h2 class="section-heading">책 제목</h2>
+        <input
+          type="text"
+          id="bookTitle"
+          class="input-text"
+          placeholder="예: 엄마에게 드리는 우리의 이야기"
+          value="켜켜이 - 우리의 이야기"
+        />
+      </div>
+
+      <!-- 타임라인 -->
+      <div class="section-box">
+        <div class="section-heading-row">
+          <h2 class="section-heading">우리의 이야기</h2>
+          <button class="btn-add" onclick="addEntry()">+ 시기 추가</button>
+        </div>
+        <p class="section-desc">
+          사진이 있으면 사진을, 없으면 기억을 글로 남겨주세요.
+          <span class="desc-notice">📌 최소 20개 이상의 시기를 입력해야 책이 만들어져요.</span>
+        </p>
+
+        <div id="timeline" class="timeline">
+          <!-- 더미 데이터로 초기 항목 -->
+        </div>
+      </div>
+
+      <!-- 책 만들기 버튼 -->
+      <div class="submit-area">
+        <button class="btn-primary btn-large" onclick="createBook()">
+          책 만들기
+        </button>
+        <p class="submit-desc">입력한 내용으로 책을 생성합니다</p>
+      </div>
+
+      <!-- 로딩 -->
+      <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+        <p id="loadingText">책을 만들고 있어요...</p>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>켜켜이 · Powered by Book Print API</p>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // 더미 데이터 초기 로드
+    const dummyEntries = [
+      { period: "1983년 봄", title: "두 사람의 만남", text: "벚꽃이 흩날리던 날, 처음 만났습니다." },
+      { period: "1984년 여름", title: "첫 데이트", text: "한강변을 걸으며 많은 이야기를 나눴어요." },
+      { period: "1985년 가을", title: "프로포즈", text: "노을이 지던 저녁, 무릎을 꿇었습니다." },
+      { period: "1986년 봄", title: "결혼식", text: "하얀 드레스와 환한 미소, 가장 빛나던 날." },
+      { period: "1987년", title: "신혼여행", text: "제주도 푸른 바다 앞에서 함께 웃었어요." },
+      { period: "1988년", title: "첫째 탄생", text: "작고 따뜻한 손을 처음 잡았던 순간." },
+      { period: "1990년", title: "첫 번째 집", text: "작은 집이었지만 가장 따뜻한 공간이었어요." },
+      { period: "1992년", title: "둘째 탄생", text: "가족이 더 커졌어요. 집안이 웃음으로 가득했죠." },
+      { period: "1994년", title: "가족 여행", text: "온 가족이 함께한 첫 번째 해외여행이었어요." },
+      { period: "1996년", title: "아이들의 학교 입학", text: "손을 잡고 교문 앞에 섰던 날을 기억해요." },
+      { period: "1998년", title: "가족 사진", text: "온 가족이 모여 찍은 사진, 모두가 웃고 있었어요." },
+      { period: "2000년", title: "새 천년", text: "새로운 시작을 가족과 함께했어요." },
+      { period: "2002년", title: "월드컵의 추억", text: "온 가족이 함께 응원했던 그 여름." },
+      { period: "2005년", title: "부모님 결혼기념일", text: "20주년을 온 가족이 함께 축하했어요." },
+      { period: "2008년", title: "아이들의 성장", text: "어느새 훌쩍 커버린 아이들을 보며 뭉클했어요." },
+      { period: "2010년", title: "가족 여행 2", text: "오랜만에 떠난 가족 여행, 모두 행복했어요." },
+      { period: "2013년", title: "대학 입학", text: "자녀가 대학에 입학하던 날, 눈물이 났어요." },
+      { period: "2016년", title: "취업 소식", text: "첫 월급으로 부모님께 식사를 대접했어요." },
+      { period: "2020년", title: "코로나 시절", text: "함께 있어서 더 따뜻했던 시간이었어요." },
+      { period: "2024년", title: "지금 이 순간", text: "켜켜이 쌓인 추억들, 모두 감사합니다." },
+      { period: "2025년 봄", title: "함께한 시간들", text: "모든 순간이 소중했어요." },
+      { period: "2025년 여름", title: "가족의 의미", text: "가족이 있어 든든했습니다." },
+      { period: "2025년 가을", title: "감사한 날들", text: "함께해서 행복했어요." },
+      { period: "2025년 겨울", title: "앞으로도 함께", text: "앞으로도 늘 곁에 있을게요." },
+    ];
+
+    dummyEntries.forEach((entry, i) => addEntry(entry));
+  </script>
+</body>
+</html>
